@@ -127,6 +127,14 @@ Dockerfile
 
 ## 线上 WebUI
 
-本地：http://127.0.0.1:8000  
+- **本机（已验证）**：http://127.0.0.1:8000 （`make run` / uvicorn）
+- **公网**：将仓库推送到 Render / Railway / Fly.io 等后，把公网 URL 回填此处并截图 CI pass。示例：
 
-若已部署，将公网 URL 写在此处（见课程提交说明）：`TBD_AFTER_DEPLOY`
+```bash
+# Render 等平台设置启动命令：
+uvicorn forgeloop.api.app:app --host 0.0.0.0 --port $PORT
+# 环境变量：FORGELOOP_USE_MOCK=1（演示）或配置凭据相关变量
+```
+
+提交 NJU Git 前请确认：远程 CI 的 `unit-test` job 为 pass，并把公网 WebUI 链接写进本段。
+
