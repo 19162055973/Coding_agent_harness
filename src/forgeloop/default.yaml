@@ -1,0 +1,7 @@
+max_steps: 20
+test_command: "python -m pytest -q"
+hitl_enabled: true
+model: "gpt-4o-mini"
+memory_limit: 5
+deny_patterns: []
+approval_patterns: []
