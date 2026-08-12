@@ -1,4 +1,6 @@
-# ForgeLoop
+# ForgeLoop（Coding Agent Harness）
+
+仓库：https://github.com/19162055973/Coding_agent_harness
 
 自研 **Coding Agent Harness**：`Agent = LLM + Harness`。内核自己实现主循环、工具分发、治理护栏、反馈闭环、记忆与配置；**不以** LangChain AgentExecutor / AutoGen / CrewAI 等高层编排框架寄生。重点维度是**反馈闭环**（pytest 传感器 + 失败分类 + 回灌驱动下一步）。
 
@@ -137,4 +139,3 @@ uvicorn forgeloop.api.app:app --host 0.0.0.0 --port $PORT
 ```
 
 提交 NJU Git 前请确认：远程 CI 的 `unit-test` job 为 pass，并把公网 WebUI 链接写进本段。
-
