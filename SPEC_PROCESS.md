@@ -48,41 +48,80 @@
 
 ---
 
-## 2. 冷启动验证（第二种智能体）
+## 2. 冷启动验证（第二种智能体）— 客观证据
 
-**计划操作**：使用与 Cursor 不同的 agent（如 Gemini CLI / Claude Code 新 session），仅投喂 `SPEC.md` + `PLAN.md`，实现 Task 1–2。
+**时间**：2026-08-12  
+**第二种智能体**：独立 Cursor `generalPurpose` 新会话（与主开发会话隔离，无共享对话历史）  
+**输入约束**：仅允许阅读 `SPEC.md` + `PLAN.md`；禁止复制 `src/forgeloop`；不确定即暂停提问  
+**指定范围**：PLAN Task 1–2  
+**产物**：`cold_start_scratch/`（桩代码 + `REPORT.md` + `PAUSE_LOG.md`）
 
-**本仓库执行时的替代证据**（若第二种 agent 当时不可用）：
-1. 作者以「空白上下文」自审 SPEC，列出易歧义点并修订（见下）。
-2. 实现阶段凡 subagent/新会话若偏离，记入 `AGENT_LOG.md`。
+### 2.1 智能体在何处暂停并提问（节选）
 
-### 自审暴露的 SPEC 缺陷与修订
+1. `LLMResponse` 字段未定义 → 拒绝臆造 dataclass  
+2. `LLMPort.complete` 签名 / messages 形态不明 → 只留 ABC stub  
+3. `MockLLM` 队列元素类型与耗尽行为不明  
+4. `AgentAction` 的 `type/name` 斜杠写法歧义  
+5. PLAN Task 1–2 卡片被压缩成仅「状态：completed」，无目标/文件/验证 → **无法从 PLAN 单独开工**  
+6. 文件工具返回值：§3.3 口语「内容或错误」vs §6 `ToolResult`  
+7. `write_file` 是否自动 `mkdir -p`  
+8. `list_dir` 深度与排序  
 
-| 缺陷 | 修订 |
-|------|------|
-| 「run_tests」与 shell 跑 pytest 职责重叠 | 明确 `run_tests` 走 FeedbackSensor，返回结构化报告；shell 仍受护栏 |
-| HITL 超时策略未写 | 明确保持 `waiting_hitl`，由用户 approve/deny |
-| 容器内 keyring 不可用 | 明确自动回退加密文件后端 |
-| Open Design 是否强制 | 增加豁免理由段落 |
+完整 12+ 个 pause 见 `cold_start_scratch/REPORT.md`。
 
-### 关键 diff（概念）
+### 2.2 与原意不一致的解读
+
+| 冷启动解读 | 判定 | 处理 |
+|------------|------|------|
+| PLAN 空白 = 可自由设计接口 | **SPEC/PLAN 写残（作者过早压缩）**，不是 agent 读错 | 恢复 Task 1–2 完整卡片 |
+| `type/name` = 两个必填字段 | **SPEC 措辞含糊**；实现本意是单一 `name` | SPEC 改为 `name` + `args` + `raw?` |
+| 工具返回裸字符串 | 表格口语化导致误读；模型层应是 `ToolResult` | SPEC 表格改为明确 `ToolResult` |
+| `write_file` 不建父目录 | 合理暂停点；实现选择自动建父目录 | SPEC 写死「自动创建缺失父目录」 |
+
+### 2.3 产出与预期差距
+
+- 预期：第二种 agent 能独立完成 Task 1–2 红绿。  
+- 实际：**partial** — 能搭目录与逃逸检查骨架，但无法在不猜测的前提下完成可测实现。  
+- 结论：实现完成后把 PLAN 压成状态表，会毁掉冷启动可用性；SPEC 数据模型必须把 `LLMResponse` 等写全。
+
+### 2.4 据此对 SPEC / PLAN 的修订（关键 diff）
 
 ```diff
-- 工具：run_shell 可执行 pytest
-+ 工具：run_tests 专用传感器；run_shell 不替代结构化反馈路径
+ ### 3.2 LLM 抽象
+-| 输入 | messages + tool schema 描述 |
+-| 行为 | LLMPort.complete(...) 返回结构化动作或文本；MockLLM 按脚本队列…
++| 输入 | messages: list[LLMMessage]；tools_desc: str
++| 行为 | complete(...) -> LLMResponse；MockLLM FIFO；队列空抛 LLMError
++| JSON 约定 | {"name": "<tool>", "args": {...}}
 
-- 凭据：仅 keyring
-+ 凭据：keyring 优先，无钥匙串时 Fernet 加密文件
+ ### 3.3
+-| write_file | … | ok / error |
++| write_file | … | ToolResult；自动创建缺失父目录 |
++ WorkspaceGate.resolve(rel) 语义写清
+
+ ## 6 数据模型
+-- AgentAction：type/name, args, raw
++- AgentAction：name, args, raw?
++- LLMResponse：content, action?
++- HarnessConfig 字段列表写全
+
+ ## PLAN Task 1–2
+-- 仅「状态：✓ completed」
++- 恢复 目标 / 文件 / 验证 / 依赖（冷启动后回填）
 ```
+
+### 2.5 反思
+
+这次冷启动证明：共享隐性上下文会让主 agent「以为 PLAN 已足够」。第二种 agent 在空白 Task 卡上立刻停住——这正是课程要的信号。修订后 Task 1–2 对陌生实现者应达到「可不提问完成 stubs + 测试」的清晰度。
 
 ---
 
 ## 3. 进入 writing-plans
 
-设计确认后产出 `PLAN.md`（Task 0–12），颗粒度按「单测红绿 + 明确文件」切分，供 subagent-driven 执行。
+设计确认后产出 `PLAN.md`（Task 0–12）。冷启动后已把压缩掉的 Task 1–2 卡片恢复。
 
 ---
 
-## 4. 反思（过程向）
+## 4. 过程向反思
 
-brainstorming 的价值在于把「课程强制约束」（WebUI、mock 可测、非框架寄生）尽早变成架构不变量；不足在于当用户要求「一次做完」时，多轮签字被压缩，SPEC 质量更依赖作者事后冷读与测试反推。
+brainstorming 的价值在于把课程硬约束写成架构不变量；不足在于交付压力下签字与 PLAN 维护被压缩。冷启动是单人项目里最接近同侪评审的机制，本项目在实现后补做，成本是返工文档——但仍比没有客观证据更好。

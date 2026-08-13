@@ -44,24 +44,26 @@
 
 | 项 | 说明 |
 |----|------|
-| 输入 | messages + tool schema 描述 |
-| 行为 | `LLMPort.complete(...)` 返回结构化动作或文本；`MockLLM` 按脚本队列吐出预定动作 |
-| 输出 | `LLMResponse` |
-| 边界 | 真实供应商仅 OpenAI-compatible Chat Completions；测试禁止触网 |
-| 错误 | HTTP/鉴权错误包装为 `LLMError` |
+| 输入 | `messages: list[LLMMessage]`（`role`/`content`）；`tools_desc: str`（工具说明文本，可空） |
+| 行为 | `LLMPort.complete(messages, tools_desc="") -> LLMResponse`；`MockLLM(script)` 按 FIFO 弹出 `AgentAction` 或 JSON 字符串；队列空抛 `LLMError("MockLLM script exhausted")` |
+| 输出 | `LLMResponse(content: str, action: AgentAction \| None)`；工具轮次应带可解析 `action` |
+| 边界 | 真实供应商仅 OpenAI-compatible Chat Completions；**单元测试禁止触网**，必须可注入 Mock |
+| 错误 | HTTP/鉴权/解析失败包装为 `LLMError` |
+
+JSON 动作约定：`{"name": "<tool>", "args": { ... }}`（可用 markdown fence 包裹）。
 
 ### 3.3 工具分发（`forgeloop.tools`）
 
 | 工具 | 输入 | 行为 | 输出 |
 |------|------|------|------|
-| `read_file` | 相对路径 | 读取工作区内文件 | 内容或错误 |
-| `write_file` | 相对路径 + 内容 | 写入工作区（禁止逃逸） | ok / error |
-| `list_dir` | 相对路径 | 列出目录 | 条目列表 |
-| `run_shell` | 命令字符串 | 在工作区 cwd 执行（受护栏） | stdout/stderr/exit |
-| `run_tests` | 可选参数 | 调用反馈传感器跑测试 | 结构化 `TestReport` |
-| `finish` | 摘要 | 请求停机 | 结束 run |
+| `read_file` | 相对路径 | 读取工作区内 UTF-8 文本文件 | `ToolResult` |
+| `write_file` | 相对路径 + 内容 | 写入工作区；**自动创建缺失父目录**；禁止逃逸 | `ToolResult` |
+| `list_dir` | 相对路径（默认 `.`） | 非递归列出；目录名带 `/`；按名字排序 | `ToolResult` |
+| `run_shell` | 命令字符串 | 在工作区 cwd 执行（受护栏） | `ToolResult` |
+| `run_tests` | 可选 extra | 走 `TestSensor`，结构化反馈 | `ToolResult` + 循环内 `FeedbackEvent` |
+| `finish` | 摘要 | 请求停机 | `ToolResult` |
 
-路径一律经 `WorkspaceGate` 解析，禁止 `..` 逃逸出 workspace root。
+路径一律经 `WorkspaceGate.resolve(rel) -> Path`：`Path(root, rel).resolve()` 后必须位于 `root` 之下；空路径与逃逸路径抛 `WorkspaceError`（工具层转为 `ToolResult.ok=False`）。绝对路径若解析后仍在 root 内可接受，否则拒绝。
 
 ### 3.4 治理护栏（`forgeloop.guardrails`）
 
@@ -162,16 +164,19 @@ Browser WebUI ──HTTP──▶ FastAPI
 
 ## 6. 数据模型
 
-- `AgentTask`：id, goal, workspace, max_steps, status
-- `AgentAction`：type/name, args, raw
-- `GuardDecision`：allow | deny | needs_approval, reason
-- `ToolResult`：ok, output, error
-- `TestReport`：passed, failed, failures[], raw
+- `AgentTask`：id, goal, workspace, max_steps, session_id?
+- `AgentAction`：name (工具名 str), args (dict), raw (optional str)
+- `LLMMessage`：role, content
+- `LLMResponse`：content (str), action (AgentAction | None)
+- `GuardDecision`：verdict ∈ {allow, deny, needs_approval}, reason
+- `ToolResult`：ok, output, error；`as_observation()` 生成回灌文本
+- `TestFailure`：nodeid, message, classification
+- `TestReport`：passed, total, failed, failures[], raw
 - `FeedbackEvent`：kind, classification, summary, raw_ref
 - `MemoryEntry`：id, session_id, kind, text, created_at
-- `AgentStep`：index, action, guard, result, feedback?
-- `AgentRunResult`：status, steps[], final_message
-- `HarnessConfig`：见配置字段
+- `AgentStep`：index, action, guard, result?, feedback?, observation
+- `AgentRunResult`：status, steps[], final_message, pending_action?
+- `HarnessConfig`：max_steps, test_command, hitl_enabled, model, deny_patterns, approval_patterns, memory_limit
 - `CredentialStatus`：configured, backend, hint_mask
 
 ---

@@ -31,7 +31,9 @@
 
 ---
 
-## 2026-08-10 · 分发与文档
+## 2026-08-12 · 补交付缺口
 
-- **产物**：`Dockerfile`, `.gitlab-ci.yml`（job: `unit-test`）, `README.md`, `REFLECTION.md`
-- **部署**：本机可 `make run`；公网 URL 需推送到托管平台后回填 README
+- **CI**：新增 `.github/workflows/ci.yml`，job 名 `unit-test`（与 `.gitlab-ci.yml` 对齐）
+- **部署**：新增 `render.yaml` / `Procfile` / `runtime.txt`；README 写明 Render Blueprint 步骤
+- **冷启动**：独立 generalPurpose agent 仅读 SPEC+PLAN，结论 partial；已修订 SPEC §3.2/§3.3/§6 与 PLAN Task 1–2；证据在 `cold_start_scratch/REPORT.md` 与 `SPEC_PROCESS.md` §2
+- **人工仍需**：Render 账号一键部署拿公网 URL；在 GitHub Actions 确认绿勾并截图；按课程入口交 NJU 链接

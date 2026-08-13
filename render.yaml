@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: forgeloop
+    runtime: python
+    plan: free
+    buildCommand: pip install -e .
+    startCommand: uvicorn forgeloop.api.app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: FORGELOOP_USE_MOCK
+        value: "1"
+      - key: FORGELOOP_FORCE_FILE_CREDS
+        value: "1"
+      - key: FORGELOOP_MASTER_PASSWORD
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: "3.11.9"
