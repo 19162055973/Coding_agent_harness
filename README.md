@@ -70,7 +70,7 @@ docker run --rm -p 8000:8000 ^
   forgeloop:latest
 ```
 
-> 不要把 key 写进镜像层或提交进 Git。`-e FORGELOOP_API_KEY` 会进入进程环境（可见性风险）；更稳妥：容器内 `forgeloop creds set` 写入加密文件。
+
 
 ## Key 安全配置
 
@@ -140,17 +140,11 @@ Dockerfile
 - **本机（已验证）**：http://127.0.0.1:8000 （`make run` / uvicorn）
 - **公网（当前可访问，localtunnel 演示）**：https://wise-pigs-open.loca.lt  
   - `/health` 已验证返回 `{"ok":true,"service":"forgeloop"}`  
-  - **注意**：隧道依赖本机 uvicorn + localtunnel 进程；关机后失效。课程长期验收请改用下方 Render 固定域名。
-- **公网（Render，推荐固定部署）**：
+  - **注意**：隧道依赖本机 uvicorn + localtunnel 进程；关机后失效。
 
-  1. 打开 https://dashboard.render.com → New → Blueprint  
-  2. 连接仓库 `19162055973/Coding_agent_harness`（使用根目录 `render.yaml`）  
-  3. 创建后得到 `https://<service>.onrender.com`，把该地址回填到本段并再推一次  
-  4. 手动 Web Service 备选启动命令：
 
 ```bash
 uvicorn forgeloop.api.app:app --host 0.0.0.0 --port $PORT
 # 环境变量：FORGELOOP_USE_MOCK=1
 ```
 
-免费实例休眠后首次访问可能需等待 30–60s。NJU Git 提交时请附上公网链接与 CI pass 截图/链接。
