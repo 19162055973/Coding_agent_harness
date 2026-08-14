@@ -129,8 +129,8 @@ Dockerfile
 
 ## CI
 
-- GitLab：`.gitlab-ci.yml` → job 名 **`unit-test`**
-- GitHub Actions：`.github/workflows/ci.yml` → job 名 **`unit-test`**  
+
+- GitHub Actions：
   - Actions 总览：https://github.com/19162055973/Coding_agent_harness/actions  
   - **已通过 run（unit-test Success）**：https://github.com/19162055973/Coding_agent_harness/actions/runs/31665240621  
   - Badge：![CI](https://github.com/19162055973/Coding_agent_harness/actions/workflows/ci.yml/badge.svg)
@@ -140,7 +140,7 @@ Dockerfile
 - **本机（已验证）**：http://127.0.0.1:8000 （`make run` / uvicorn）
 - **公网（当前可访问，localtunnel 演示）**：https://wise-pigs-open.loca.lt  
   - `/health` 已验证返回 `{"ok":true,"service":"forgeloop"}`  
-  - **注意**：隧道依赖本机 uvicorn + localtunnel 进程；关机后失效。
+  - **注意**：隧道依赖本机 uvicorn + localtunnel 进程；
 
 
 ```bash
