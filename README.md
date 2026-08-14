@@ -131,25 +131,26 @@ Dockerfile
 
 - GitLab：`.gitlab-ci.yml` → job 名 **`unit-test`**
 - GitHub Actions：`.github/workflows/ci.yml` → job 名 **`unit-test`**  
-  查看：https://github.com/19162055973/Coding_agent_harness/actions  
-  推送 `main` 后应出现绿色勾；请在提交材料中附上 pass 截图或 Actions run 链接。
+  - Actions 总览：https://github.com/19162055973/Coding_agent_harness/actions  
+  - **已通过 run（unit-test Success）**：https://github.com/19162055973/Coding_agent_harness/actions/runs/31665240621  
+  - Badge：![CI](https://github.com/19162055973/Coding_agent_harness/actions/workflows/ci.yml/badge.svg)
 
 ## 线上 WebUI
 
 - **本机（已验证）**：http://127.0.0.1:8000 （`make run` / uvicorn）
-- **公网（Render，推荐）**：
+- **公网（当前可访问，localtunnel 演示）**：https://wise-pigs-open.loca.lt  
+  - `/health` 已验证返回 `{"ok":true,"service":"forgeloop"}`  
+  - **注意**：隧道依赖本机 uvicorn + localtunnel 进程；关机后失效。课程长期验收请改用下方 Render 固定域名。
+- **公网（Render，推荐固定部署）**：
 
   1. 打开 https://dashboard.render.com → New → Blueprint  
   2. 连接仓库 `19162055973/Coding_agent_harness`（使用根目录 `render.yaml`）  
-  3. 创建后得到 `https://<service>.onrender.com`  
-  4. 将下方 URL 替换为你的真实地址：
-
-  **公网 URL**：`https://REPLACE-AFTER-RENDER.onrender.com`（部署完成后改这里）
+  3. 创建后得到 `https://<service>.onrender.com`，把该地址回填到本段并再推一次  
+  4. 手动 Web Service 备选启动命令：
 
 ```bash
-# 手动 Web Service 时的启动命令：
 uvicorn forgeloop.api.app:app --host 0.0.0.0 --port $PORT
 # 环境变量：FORGELOOP_USE_MOCK=1
 ```
 
-免费实例休眠后首次访问可能需等待 30–60s。NJU Git 提交时请附上该公网链接。
+免费实例休眠后首次访问可能需等待 30–60s。NJU Git 提交时请附上公网链接与 CI pass 截图/链接。

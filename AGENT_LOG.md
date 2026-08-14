@@ -31,9 +31,8 @@
 
 ---
 
-## 2026-08-12 · 补交付缺口
+## 2026-08-13 · CI pass + 公网隧道
 
-- **CI**：新增 `.github/workflows/ci.yml`，job 名 `unit-test`（与 `.gitlab-ci.yml` 对齐）
-- **部署**：新增 `render.yaml` / `Procfile` / `runtime.txt`；README 写明 Render Blueprint 步骤
-- **冷启动**：独立 generalPurpose agent 仅读 SPEC+PLAN，结论 partial；已修订 SPEC §3.2/§3.3/§6 与 PLAN Task 1–2；证据在 `cold_start_scratch/REPORT.md` 与 `SPEC_PROCESS.md` §2
-- **人工仍需**：Render 账号一键部署拿公网 URL；在 GitHub Actions 确认绿勾并截图；按课程入口交 NJU 链接
+- **CI**：GitHub Actions run `31665240621` → **unit-test Success**（badge: passing）
+- **公网 WebUI**：localtunnel `https://wise-pigs-open.loca.lt`（/health 200）；Render 仍需用户登录 Blueprint 做固定域名
+- **冷启动证据**：`SPEC_PROCESS.md` §2 + `cold_start_scratch/REPORT.md` 已在仓库
