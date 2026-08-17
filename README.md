@@ -138,7 +138,7 @@ Dockerfile
 ## 线上 WebUI
 
 - **本机（已验证）**：http://127.0.0.1:8000 （`make run` / uvicorn）
-- **公网（当前可访问，localtunnel 演示）**：https://wise-pigs-open.loca.lt  
+- **公网（当前可访问，localtunnel 演示）**：https://dry-times-show.loca.lt
   - `/health` 已验证返回 `{"ok":true,"service":"forgeloop"}`  
   - **注意**：隧道依赖本机 uvicorn + localtunnel 进程；
 
